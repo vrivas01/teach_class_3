@@ -16,7 +16,7 @@ pipeline {
                 //Fisrt, drop the directory if exists
                 sh 'rm -rf /home/jenkins/web'
                 //Create the directory
-                sh 'mkdir /home/jenkins/web'
+                sh 'mkdir -p /home/jenkins/web'
                 
             }
         }
