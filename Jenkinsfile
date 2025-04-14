@@ -7,17 +7,14 @@ pipeline {
             input {
               message 'Enter the data'
               parameters {
-                    string(name:'AUTHOR', defaultValue: 'Sergio', description: 'Author of the web application deployment ')
+                    string(name:'AUTHOR', defaultValue: 'Victor', description: 'Author of the web application deployment ')
                     string(name:'ENVIRONMENT', defaultValue: 'Development',description: 'Environment to deploy')
                  }
             }
             steps{
                 echo "The responsible of this project is ${AUTHOR} and and will be deployed in ${ENVIRONMENT}"
-                //Fisrt, drop the directory if exists
-                sh 'rm -rf /home/jenkins/web'
-                //Create the directory
-                sh 'mkdir -p /home/jenkins/web'
-                
+                //First, delete the contents of the directory if it exists
+                sh 'rm -rf /home/jenkins/web/* /home/jenkins/web/.* || true'
             }
         }
         stage('Drop the Apache HTTPD Docker container'){
@@ -29,7 +26,7 @@ pipeline {
         stage('Create the Apache httpd container') {
             steps {
             echo 'Creating the container...'
-            sh 'docker run -dit --name apache1 -p 9000:80  -v /home/jenkins/web:/usr/local/apache2/htdocs/ httpd'
+            sh 'docker run -dit --name apache1 --network=jenkins -p 9000:80  -v C:/Users/vriva/jenkins_home/apache:/usr/local/apache2/htdocs/ httpd'
             }
         }
         stage('Copy the web application to the container directory') {
@@ -41,7 +38,7 @@ pipeline {
         stage('Checking the app') {
             steps {
                 echo 'Testing the web app'
-                sh 'wget http://localhost:9000'
+                sh 'wget http://apache1:80'
             }
         }       
     }
