@@ -23,11 +23,6 @@ pipeline {
                     }
                 }
             }
-            steps {
-                echo 'droping the container...'
-                sh 'docker rm -f app-web-apache'
-                sh 'docker rm -f app-web-nginx'
-            }
         }
         stage('Create the containers in Parallel') {
             parallel {
