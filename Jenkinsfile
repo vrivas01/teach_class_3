@@ -1,45 +1,69 @@
 pipeline {
     agent any
-   
+
+    environment {
+         WEBSERVER = "Apache"
+    }
     stages {
-        stage('Create web directory')
+        stage('Create  directory for the WEB Application')
         {
-            input {
-              message 'Enter the data'
-              parameters {
-                    string(name:'AUTHOR', defaultValue: 'Victor', description: 'Author of the web application deployment ')
-                    string(name:'ENVIRONMENT', defaultValue: 'Development',description: 'Environment to deploy')
-                 }
-            }
             steps{
-                echo "The responsible of this project is ${AUTHOR} and and will be deployed in ${ENVIRONMENT}"
-                //First, delete the contents of the directory if it exists
                 sh 'rm -rf /home/jenkins/web/* /home/jenkins/web/.* || true'
             }
         }
-        stage('Drop the Apache HTTPD Docker container'){
+        stage('Drop the container'){
             steps {
-            echo 'droping the container...'
-            sh 'docker rm -f apache1'
+                echo 'droping the container...'
+                sh 'docker rm -f app-web'
             }
         }
-        stage('Create the Apache httpd container') {
+
+        /*
+           Default local volume: C:/Users/vriva/jenkins_home/apache
+        */
+
+        // Apache Webserver
+        stage('Create the Apache container') {
+            when {
+                 environment name: 'WEBSERVER', value: 'Apache'
+            }
             steps {
-            echo 'Creating the container...'
-            sh 'docker run -dit --name apache1 --network=jenkins -p 9000:80  -v C:/Users/vriva/jenkins_home/apache:/usr/local/apache2/htdocs/ httpd'
+                echo 'Creating the container...'
+                sh 'docker run -dit --name app-web --network=jenkins -p 9000:80  -v C:/Users/vriva/jenkins_home/apache:/usr/local/apache2/htdocs/ httpd'
             }
         }
+
+        //Nginx webserver
+        stage('Create the Nginx container') {
+            when {
+                 environment name: 'WEBSERVER', value: 'Nginx'
+            }
+            steps {
+                echo 'Creating the container...'
+                sh 'docker run -dit --name app-web --network=jenkins -p 9100:80  -v C:/Users/vriva/jenkins_home/apache:/usr/share/nginx/html nginx'
+            }
+        }
+
         stage('Copy the web application to the container directory') {
             steps {
                 echo 'Copying web application...'             
                 sh 'cp -r web/* /home/jenkins/web'
             }
         }
-        stage('Checking the app') {
-            steps {
-                echo 'Testing the web app'
-                sh 'wget http://apache1:80'
-            }
-        }       
+    }
+    post {
+        always {
+            echo 'These steps are always executed'   
+        }
+        success {
+            // One or more steps need to be included within each condition's block.
+            echo 'the deployment has worked'
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'web/*', followSymlinks: false
+            cleanWs()
+       }
+       failure {
+            // One or more steps need to be included within each condition's block.
+            echo 'An error has ocurred'       
+       }
     }
 }
