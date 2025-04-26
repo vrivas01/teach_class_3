@@ -1,5 +1,9 @@
 pipeline {
     agent any
+
+    options {
+        parallelsAlwaysFailFast()
+    }
    
     stages {
         stage('Create directory for the WEB Application')
@@ -9,6 +13,7 @@ pipeline {
             }
         }
         stage('Drop the containers'){
+            failFast true
             parallel {
                 stage('Drop Apache container'){
                     steps {
